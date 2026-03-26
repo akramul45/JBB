@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>জালশুকা ব্লাড ব্যাংক - Jalshuka Blood Bank</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    :root { --neon: #ff2a4b; --glass: rgba(10, 10, 10, 0.9); }
+    body { background: #050505; color: #e2e8f0; font-family: 'Tiro Bangla', serif; background-image: radial-gradient(circle at 50% 0%, rgba(255, 42, 75, 0.15) 0%, transparent 50%); min-height: 100vh; }
+    .num-font { font-family: 'Inter', sans-serif !important; }
+    .glass-card { background: var(--glass); backdrop-filter: blur(12px); border: 1px solid rgba(255, 42, 75, 0.2); box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+    .neon-border { border-bottom: 2px solid var(--neon); box-shadow: 0 4px 15px -5px var(--neon); }
+    .neo-input { background: rgba(255, 255, 255, 0.05); border: 1px solid #333; color: white; padding: 0.75rem; border-radius: 0.75rem; width: 100%; transition: 0.3s; }
+    .neo-input:focus { border-color: var(--neon); outline: none; box-shadow: 0 0 10px rgba(255, 42, 75, 0.2); }
+    .neo-btn { border: 1px solid var(--neon); color: var(--neon); padding: 0.6rem 1.5rem; border-radius: 0.75rem; font-weight: 600; transition: 0.3s; text-transform: uppercase; letter-spacing: 0.5px; }
+    .neo-btn:hover:not(:disabled) { background: var(--neon); color: #000; box-shadow: 0 0 20px rgba(255, 42, 75, 0.4); transform: translateY(-2px); }
+    .admin-ui { display: none; }
+    .glow-text { text-shadow: 0 0 10px rgba(255, 42, 75, 0.6); }
+</style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+<header class="glass-card sticky top-0 z-50 p-4 neon-border">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <div class="bg-white p-1 rounded-full h-16 w-16 shadow-[0_0_15px_rgba(255,42,75,0.4)]">
+                <img src="a.png" alt="Logo" class="rounded-full" onerror="this.src='https://via.placeholder.com/60/ffffff/ff2a4b?text=JBB'">
+            </div>
+            <h1 class="text-2xl font-bold glow-text text-white">জালশুকা ব্লাড ব্যাংক</h1>
+        </div>
+        <nav class="flex gap-3">
+            <button onclick="openModal('addModal')" class="neo-btn text-xs md:text-sm">দাতা যোগ করুন</button>
+            <button id="loginBtn" onclick="openModal('loginModal')" class="neo-btn text-xs md:text-sm">লগইন</button>
+            <button id="logoutBtn" onclick="logout()" class="neo-btn hidden text-xs md:text-sm">লগআউট</button>
+        </nav>
+    </div>
+</header>
+
+<main class="flex-grow max-w-6xl mx-auto px-4 py-8 w-full">
+    <div class="glass-card p-5 rounded-2xl mb-8 flex flex-col md:flex-row gap-4">
+        <input id="searchInput" oninput="renderTable()" class="neo-input flex-1" placeholder="নাম, মোবাইল বা ঠিকানা দিয়ে খুঁজুন...">
+        <select id="filterBg" onchange="renderTable()" class="neo-input md:w-48 text-center cursor-pointer">
+            <option value="All">সকল গ্রুপ</option>
+            <option value="A+">A+</option><option value="B+">B+</option><option value="O+">O+</option><option value="AB+">AB+</option>
+            <option value="A-">A-</option><option value="B-">B-</option><option value="O-">O-</option><option value="AB-">AB-</option>
+        </select>
+    </div>
+
+    <div class="glass-card rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-red-950/30 text-red-400 uppercase text-sm">
+                    <tr>
+                        <th class="p-4 border-b border-red-900/30">নাম</th>
+                        <th class="p-4 border-b border-red-900/30 text-center">গ্রুপ</th>
+                        <th class="p-4 border-b border-red-900/30">মোবাইল</th>
+                        <th class="p-4 border-b border-red-900/30">ঠিকানা</th>
+                    </tr>
+                </thead>
+                <tbody id="donorTableBody" class="divide-y divide-gray-800">
+                    <tr><td colspan="4" class="p-10 text-center animate-pulse">সার্ভার থেকে তথ্য লোড হচ্ছে...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<footer class="glass-card mt-auto border-t border-red-900/30 p-8">
+    <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+        <div>
+            <h3 class="text-xl font-bold text-white mb-4">জালশুকা ব্লাড ব্যাংক</h3>
+            <p class="text-gray-400 text-sm">মানবতার সেবায় আমরা সব সময় আপনার পাশে। সঠিক সময়ে রক্ত দান করে জীবন বাঁচান।</p>
+        </div>
+        <div class="flex flex-col items-center">
+            <h3 class="text-lg font-semibold text-white mb-4">দ্রুত লিংক</h3>
+            <div class="flex gap-4">
+                <a href="#" class="text-gray-400 hover:text-red-500 transition">ফেসবুক</a>
+                <a href="#" class="text-gray-400 hover:text-red-500 transition">ওয়েবসাইট</a>
+            </div>
+        </div>
+        <div class="md:text-right">
+            <h3 class="text-lg font-semibold text-white mb-4">যোগাযোগ</h3>
+            <p class="text-gray-400 text-sm num-font">support@jalshuka-bb.com</p>
+            <p class="text-gray-500 text-xs mt-4">© ২০২৬ সর্বস্বত্ব সংরক্ষিত</p>
+        </div>
+    </div>
+</footer>
+
+<div id="addModal" class="fixed inset-0 bg-black/95 hidden z-[60] flex items-center justify-center p-4">
+    <div class="glass-card p-6 rounded-2xl w-full max-w-md">
+        <h2 class="text-2xl font-bold text-center mb-6">নতুন রক্তদাতা নিবন্ধন</h2>
+        <div class="space-y-4">
+            <input id="newName" class="neo-input" placeholder="দাতার নাম">
+            <input id="newFname" class="neo-input" placeholder="পিতার নাম">
+            <input id="newMobile" type="tel" class="neo-input num-font" placeholder="মোবাইল নম্বর (১১ ডিজিট)" maxlength="11">
+            <input id="newAddress" class="neo-input" placeholder="ঠিকানা">
+            <select id="newBg" class="neo-input">
+                <option value="A+">A+</option><option value="B+">B+</option><option value="O+">O+</option><option value="AB+">AB+</option>
+                <option value="A-">A-</option><option value="B-">B-</option><option value="O-">O-</option><option value="AB-">AB-</option>
+            </select>
+        </div>
+        <div class="flex gap-3 mt-6">
+            <button id="saveDonorBtn" onclick="addDonor()" class="neo-btn flex-1 bg-red-900/20">সংরক্ষণ করুন</button>
+            <button onclick="closeModal('addModal')" class="neo-btn flex-1 !border-gray-600 !text-gray-400">বাতিল</button>
+        </div>
+    </div>
+</div>
+
+<div id="loginModal" class="fixed inset-0 bg-black/95 hidden z-[60] flex items-center justify-center p-4">
+    <div class="glass-card p-6 rounded-2xl w-full max-w-sm text-center">
+        <h2 class="text-2xl font-bold mb-6">অ্যাডমিন লগইন</h2>
+        <input id="adminUser" class="neo-input mb-4" placeholder="ইউজারনেম">
+        <input id="adminPass" type="password" class="neo-input mb-6" placeholder="পাসওয়ার্ড">
+        <div class="flex gap-3">
+            <button id="loginSubmitBtn" onclick="login()" class="neo-btn flex-1">লগইন</button>
+            <button onclick="closeModal('loginModal')" class="neo-btn flex-1 !border-gray-600 !text-gray-400">বন্ধ করুন</button>
+        </div>
+    </div>
+</div>
+
+<div id="detailsModal" class="fixed inset-0 bg-black/95 hidden z-[60] flex items-center justify-center p-4">
+    <div class="glass-card p-6 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-start mb-6 border-b border-red-900/30 pb-4">
+            <div><h2 id="detailName" class="text-3xl font-bold text-white mb-1"></h2><span id="detailBg" class="text-red-400 font-bold num-font"></span></div>
+            <button onclick="closeModal('detailsModal')" class="text-3xl hover:text-red-500">&times;</button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 bg-white/5 p-4 rounded-xl">
+            <p><span class="text-gray-500 text-sm block">পিতার নাম:</span> <span id="detailFname"></span></p>
+            <p><span class="text-gray-500 text-sm block">মোবাইল:</span> <span id="detailMobile" class="num-font text-blue-400 underline"></span></p>
+            <p class="sm:col-span-2"><span class="text-gray-500 text-sm block">ঠিকানা:</span> <span id="detailAddress"></span></p>
+        </div>
+        <h3 class="text-lg font-semibold text-red-400 mb-4 border-l-4 border-red-500 pl-3">রক্তদানের ইতিহাস</h3>
+        <div class="admin-ui mb-4 p-3 bg-white/5 rounded-lg flex flex-wrap gap-2">
+            <input type="date" id="histDate" class="neo-input !py-1.5 flex-1 min-w-[120px]">
+            <input type="text" id="histAmount" class="neo-input !py-1.5 flex-1 min-w-[120px]" placeholder="পরিমাণ">
+            <button id="addHistBtn" onclick="addDonation()" class="neo-btn !py-1.5">যোগ করুন</button>
+        </div>
+        <table class="w-full text-left mb-6">
+            <tbody id="donationTable" class="divide-y divide-gray-800"></tbody>
+        </table>
+        <p id="noHistoryMsg" class="text-center text-gray-500 py-4 hidden">কোন তথ্য পাওয়া যায়নি</p>
+        <div class="admin-ui border-t border-red-900/30 pt-4 text-right">
+            <button id="delDonorBtn" onclick="deleteDonor()" class="neo-btn !border-red-600 !text-red-600 text-xs">দাতা ডিলিট করুন</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvN67vorAodgvr86xGfl73I9JeBEXLobe0-lFtgX-8FHo9cvlWXqvCGFbO2sbezDws/exec";
+let donors = [], currentDonorId = null, isAdmin = sessionStorage.getItem("jalshuka_admin") === "true";
+
+async function fetchDonors() {
+    try {
+        const res = await fetch(`${SCRIPT_URL}?action=getDonors`);
+        donors = await res.json();
+        renderTable();
+    } catch (e) {
+        document.getElementById('donorTableBody').innerHTML = `<tr><td colspan="4" class="p-6 text-center text-red-500">তথ্য লোড করতে ব্যর্থ হয়েছে।</td></tr>`;
+    }
+}
+
+const sendData = (payload) => fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) }).then(res => res.json());
+
+function updateUI() {
+    document.querySelectorAll('.admin-ui').forEach(el => el.style.display = isAdmin ? (['TH','TD'].includes(el.tagName)?'table-cell':'block') : 'none');
+    document.getElementById('loginBtn').classList.toggle('hidden', isAdmin);
+    document.getElementById('logoutBtn').classList.toggle('hidden', !isAdmin);
+}
+
+async function login() {
+    const btn = document.getElementById('loginSubmitBtn'), u = document.getElementById('adminUser').value, p = document.getElementById('adminPass').value;
+    btn.innerText = "চেক করা হচ্ছে..."; btn.disabled = true;
+    try {
+        const res = await fetch(`${SCRIPT_URL}?action=login&user=${u}&pass=${p}`);
+        const data = await res.json();
+        if(data.success) { isAdmin=true; sessionStorage.setItem("jalshuka_admin","true"); updateUI(); closeModal('loginModal'); }
+        else alert("ভুল তথ্য!");
+    } catch(e) { alert("লগইন ত্রুটি!"); }
+    btn.innerText = "লগইন"; btn.disabled = false;
+}
+
+function logout() { isAdmin=false; sessionStorage.removeItem("jalshuka_admin"); updateUI(); closeModal('detailsModal'); }
+
+function renderTable() {
+    const q = document.getElementById('searchInput').value.toLowerCase(), f = document.getElementById('filterBg').value, tbody = document.getElementById('donorTableBody');
+    tbody.innerHTML = "";
+    const filtered = donors.filter(d => (d.name.toLowerCase().includes(q) || d.mobile.includes(q) || d.address.toLowerCase().includes(q)) && (f==="All" || d.bg===f));
+    if(!filtered.length) return tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-500">কোন দাতা পাওয়া যায়নি</td></tr>`;
+    filtered.forEach(d => {
+        const tr = document.createElement('tr');
+        tr.className = "cursor-pointer hover:bg-white/5 transition";
+        tr.onclick = () => showDetails(d.id);
+        tr.innerHTML = `<td class="p-4 font-medium">${d.name}</td><td class="p-4 text-red-400 font-bold text-center num-font">${d.bg}</td><td class="p-4 num-font"><a href="tel:${d.mobile}" onclick="event.stopPropagation()" class="hover:underline">${d.mobile}</a></td><td class="p-4 text-sm text-gray-400 truncate max-w-[120px]">${d.address}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+async function addDonor() {
+    const n = document.getElementById('newName').value.trim(), m = document.getElementById('newMobile').value.trim();
+    if(!n || m.length<11) return alert("সঠিক নাম ও মোবাইল দিন!");
+    const btn = document.getElementById('saveDonorBtn'); btn.innerText = "সেভ হচ্ছে..."; btn.disabled = true;
+    const d = { id: Date.now().toString(), name: n, fname: document.getElementById('newFname').value, mobile: m, address: document.getElementById('newAddress').value, bg: document.getElementById('newBg').value, history: [] };
+    try { await sendData({ action: "addDonor", data: d }); donors.push(d); closeModal('addModal'); renderTable(); } catch(e) { alert("ত্রুটি!"); }
+    btn.innerText = "সংরক্ষণ করুন"; btn.disabled = false;
+}
+
+async function addDonation() {
+    const dt = document.getElementById('histDate').value, am = document.getElementById('histAmount').value;
+    if(!dt || !am) return alert("তারিখ ও পরিমাণ দিন");
+    const idx = donors.findIndex(d => d.id === currentDonorId), hist = [...donors[idx].history, {date:dt, amount:am}].sort((a,b)=>new Date(b.date)-new Date(a.date));
+    try { await sendData({ action:"updateHistory", id:currentDonorId, history:hist }); donors[idx].history=hist; renderHistory(); } catch(e) { alert("ত্রুটি!"); }
+}
+
+async function deleteDonor() {
+    if(!confirm("নিশ্চিত তো?")) return;
+    try { await sendData({ action:"deleteDonor", id:currentDonorId }); donors=donors.filter(d=>d.id!==currentDonorId); closeModal('detailsModal'); renderTable(); } catch(e) { alert("ত্রুটি!"); }
+}
+
+function showDetails(id) {
+    currentDonorId = id; const d = donors.find(x => x.id === id);
+    document.getElementById('detailName').innerText = d.name;
+    document.getElementById('detailBg').innerText = d.bg;
+    document.getElementById('detailFname').innerText = d.fname || "নেই";
+    document.getElementById('detailMobile').innerHTML = `<a href="tel:${d.mobile}">${d.mobile}</a>`;
+    document.getElementById('detailAddress').innerText = d.address || "নেই";
+    renderHistory(); openModal('detailsModal');
+}
+
+function renderHistory() {
+    const d = donors.find(x => x.id === currentDonorId), tbody = document.getElementById('donationTable'), msg = document.getElementById('noHistoryMsg');
+    tbody.innerHTML = ""; msg.classList.toggle('hidden', d.history?.length > 0);
+    d.history?.forEach((h, i) => {
+        tbody.innerHTML += `<tr class="text-sm"><td class="py-3 num-font">${h.date}</td><td class="py-3"><span class="bg-red-950/40 px-2 py-1 rounded text-red-400">${h.amount}</span></td>${isAdmin?`<td class="text-right"><button onclick="deleteDonation(${i})" class="text-red-500 p-1">&times;</button></td>`:''}</tr>`;
+    });
+    updateUI();
+}
+
+function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+window.onclick = (e) => ['addModal', 'loginModal', 'detailsModal'].forEach(id => { if(e.target==document.getElementById(id)) closeModal(id); });
+
+updateUI(); fetchDonors();
+</script>
+</body>
+</html>
